@@ -16,9 +16,6 @@ URobotFlash::URobotFlash(const std::string& hostname, uint port) :
 
 }
 
-URobotFlash::URobotFlash(const URobotFlash& orig) {
-}
-
 URobotFlash::~URobotFlash() {
 }
 

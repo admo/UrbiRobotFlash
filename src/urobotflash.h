@@ -13,11 +13,10 @@
 
 #include <string>
 
-class URobotFlash {
+class URobotFlash : private boost::noncopyable {
 public:
     URobotFlash(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
             uint port = PlayerCc::PLAYER_PORTNUM);
-    URobotFlash(const URobotFlash& orig);
     virtual ~URobotFlash();
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
