@@ -1,0 +1,17 @@
+find_package (PkgConfig REQUIRED)
+
+pkg_search_module (playerc++ REQUIRED playerc++)
+
+include_directories (${playerc++_INCLUDE_DIRS})
+add_library (urobotflash SHARED urobotflash.cpp)
+target_link_libraries (urobotflash ${playerc++_LIBRARIES})
+
+set_target_properties (urobotflash PROPERTIES
+  VERSION 0.0.1
+  SOVERSION 0.0.1)
+
+install (TARGETS urobotflash DESTINATION lib COMPONENT libraries)
+
+add_executable (test test.cpp)
+target_link_libraries (test urobotflash ${playerc++_LIBRARIES})
+
