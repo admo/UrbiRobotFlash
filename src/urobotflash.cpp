@@ -7,7 +7,13 @@
 
 #include "urobotflash.h"
 
-URobotFlash::URobotFlash() {
+using namespace PlayerCc;
+
+URobotFlash::URobotFlash(const std::string& hostname, uint port) :
+        mRobot(new PlayerClient(hostname, port)),
+        mPosition(new Position2dProxy(mRobot.get())),
+        mPlanner(new PlannerProxy(mRobot.get())) {
+
 }
 
 URobotFlash::URobotFlash(const URobotFlash& orig) {

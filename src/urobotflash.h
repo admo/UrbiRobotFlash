@@ -8,13 +8,21 @@
 #ifndef UROBOTFLASH_H
 #define	UROBOTFLASH_H
 
+#include <libplayerc++/playerc++.h>
+#include <boost/scoped_ptr.hpp>
+
+#include <string>
+
 class URobotFlash {
 public:
-    URobotFlash();
+    URobotFlash(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
+            uint port = PlayerCc::PLAYER_PORTNUM);
     URobotFlash(const URobotFlash& orig);
     virtual ~URobotFlash();
 private:
-
+    boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
+    boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
 };
 
 #endif	/* UROBOTFLASH_H */
