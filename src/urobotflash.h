@@ -21,7 +21,7 @@ public:
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
-    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
+    //boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
 };
 
 #endif	/* UROBOTFLASH_H */
