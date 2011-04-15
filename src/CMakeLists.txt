@@ -1,8 +1,9 @@
 find_package (PkgConfig REQUIRED)
+find_package (Boost REQUIRED)
 
 pkg_search_module (playerc++ REQUIRED playerc++)
 
-include_directories (${playerc++_INCLUDE_DIRS})
+include_directories (${playerc++_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 add_library (urobotflash SHARED urobotflash.cpp)
 target_link_libraries (urobotflash ${playerc++_LIBRARIES})
 
