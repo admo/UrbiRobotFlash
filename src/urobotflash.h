@@ -23,27 +23,27 @@ public:
     // Funkcje sterujące połączeniem
     bool connect(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
             uint port = PlayerCc::PLAYER_PORTNUM);
-    bool isConnected() const { return mIsConnected; }
+    bool isConnected() const;
     void disconnect();
     
     // Funkcje sterujące bezpośrednio robotem
-    void setSpeed(double xSpeed, double yawSpeed) { setXSpeed(xSpeed); setYawSpeed(yawSpeed); }
-    void setXSpeed(double xSpeed) { mXSpeed = xSpeed; }
-    void setYawSpeed(double yawSpeed) { mYawSpeed = yawSpeed; }
-    void stopRobot() { setSpeed(0.0, 0.0); }
-    double getActualXSpeed() const { return isConnected() ? mPosition->GetXSpeed() : 0.0; }
-    double getActualYawSpeed() const { return isConnected() ? mPosition->GetYawSpeed() : 0.0; }
+    void setSpeed(double xSpeed, double yawSpeed);
+    void setXSpeed(double xSpeed);
+    void setYawSpeed(double yawSpeed);
+    void stopRobot();
+    double getActualXSpeed() const;
+    double getActualYawSpeed() const;
     
     // Funkcje sterujące planerem
     void setGoalPose(double goalX, double goalY, double goalAngle);
     bool goToGoalPose(double goalX, double goalY, double goalAngle);
     bool isGoalPoseReached() const;
-    double getActualXPos() const { return isConnected() ? mPlanner->GetPx() : 0; }
-    double getActualYPos() const { return isConnected() ? mPlanner->GetPy() : 0; }
-    double getActualAnglePos() const { return isConnected() ? mPlanner->GetPa() : 0; }
-    double getGoalXPos() const { return isConnected() ? mPlanner->GetGx() : 0; }
-    double getGoalYPos() const { return isConnected() ? mPlanner->GetGy() : 0; }
-    double getGoalAnglePos() const { return isConnected() ? mPlanner->GetPa() : 0; }
+    double getActualXPos() const;
+    double getActualYPos() const;
+    double getActualAnglePos() const;
+    double getGoalXPos() const;
+    double getGoalYPos() const;
+    double getGoalAnglePos() const;
     
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
@@ -57,6 +57,59 @@ private:
     // Dane sterujące robotem
     double mXSpeed, mYawSpeed;
 };
+
+inline bool URobotFlash::isConnected() const {
+    return mIsConnected;
+}
+
+inline void URobotFlash::setSpeed(double xSpeed, double yawSpeed) {
+    setXSpeed(xSpeed);
+    setYawSpeed(yawSpeed);
+}
+
+inline void URobotFlash::setXSpeed(double xSpeed) {
+    mXSpeed = xSpeed;
+}
+
+inline void URobotFlash::setYawSpeed(double yawSpeed) {
+    mYawSpeed = yawSpeed;
+}
+
+inline void URobotFlash::stopRobot() {
+    setSpeed(0.0, 0.0);
+}
+
+inline double URobotFlash::getActualXSpeed() const {
+    return isConnected() ? mPosition->GetXSpeed() : 0.0;
+}
+
+inline double URobotFlash::getActualYawSpeed() const {
+    return isConnected() ? mPosition->GetYawSpeed() : 0.0;
+}
+
+inline double URobotFlash::getActualXPos() const {
+    return isConnected() ? mPlanner->GetPx() : 0;
+}
+
+inline double URobotFlash::getActualYPos() const {
+    return isConnected() ? mPlanner->GetPy() : 0;
+}
+
+inline double URobotFlash::getActualAnglePos() const {
+    return isConnected() ? mPlanner->GetPa() : 0;
+}
+
+inline double URobotFlash::getGoalXPos() const {
+    return isConnected() ? mPlanner->GetGx() : 0;
+}
+
+inline double URobotFlash::getGoalYPos() const {
+    return isConnected() ? mPlanner->GetGy() : 0;
+}
+
+inline double URobotFlash::getGoalAnglePos() const {
+    return isConnected() ? mPlanner->GetPa() : 0;
+}
 
 #endif	/* UROBOTFLASH_H */
 
