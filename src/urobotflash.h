@@ -10,6 +10,7 @@
 
 #include <libplayerc++/playerc++.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread.hpp>
 #include <urbi/uobject.hh>
 
 #include <string>
@@ -47,7 +48,8 @@ public:
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
-    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
+    boost::scoped_ptr<boost::thread> mURobotFlashThread;
     
     // Status połączenia
     bool mIsConnected;
