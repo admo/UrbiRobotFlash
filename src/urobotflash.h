@@ -10,18 +10,18 @@
 
 #include <libplayerc++/playerc++.h>
 #include <boost/scoped_ptr.hpp>
+#include <urbi/uobject.hh>
 
 #include <string>
 
-class URobotFlash : private boost::noncopyable {
+class URobotFlash : private boost::noncopyable, public urbi::UObject {
 public:
     URobotFlash(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
             uint port = PlayerCc::PLAYER_PORTNUM);
-    virtual ~URobotFlash();
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
-    //boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;
 };
 
 #endif	/* UROBOTFLASH_H */
