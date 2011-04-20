@@ -11,6 +11,15 @@
 using namespace PlayerCc;
 using namespace std;
 
+URobotFlash::URobotFlash() :
+        mRobot(NULL),
+        mPosition(NULL),
+        mPlanner(NULL),
+        mURobotFlashThread(NULL),
+        mIsConnected(false),
+        mXSpeed(0.0), mYawSpeed(0.0)
+{}
+
 URobotFlash::URobotFlash(const std::string& hostname, uint port) :
         mRobot(NULL),
         mPosition(NULL),
