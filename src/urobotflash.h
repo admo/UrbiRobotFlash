@@ -87,6 +87,10 @@ inline double URobotFlash::getActualYawSpeed() const {
     return isConnected() ? mPosition->GetYawSpeed() : 0.0;
 }
 
+inline bool URobotFlash::isGoalPoseReached() const {
+    return isConnected() ? mPlanner->GetPathDone() : false;
+}
+
 inline double URobotFlash::getActualXPos() const {
     return isConnected() ? mPlanner->GetPx() : 0;
 }
