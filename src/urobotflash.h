@@ -17,8 +17,7 @@
 
 class URobotFlash : private boost::noncopyable, public urbi::UObject {
 public:
-    URobotFlash(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
-            uint port = PlayerCc::PLAYER_PORTNUM);
+    URobotFlash(const std::string& s);
     
     // Funkcje sterujące połączeniem
     bool connect(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
