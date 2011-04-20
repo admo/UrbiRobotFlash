@@ -31,19 +31,19 @@ public:
     void setXSpeed(double xSpeed);
     void setYawSpeed(double yawSpeed);
     void stopRobot();
-    double getActualXSpeed() const;
-    double getActualYawSpeed() const;
+    double getActualXSpeed() const { return isConnected() ? mPosition->GetXSpeed() : 0; }
+    double getActualYawSpeed() const { return isConnected() ? mPosition->GetYawSpeed() : 0; }
     
     // Funkcje sterujące planerem
     void setGoalPose(double goalX, double goalY, double goalAngle);
     bool goToGoalPose(double goalX, double goalY, double goalAngle);
     bool isGoalPoseReached() const;
-    double getActualXPos() const;
-    double getActualYPos() const;
-    double getActualAnglePos() const;
-    double getGoalXPos() const;
-    double getGoalYPos() const;
-    double getGoalAnglePos() const;
+    double getActualXPos() const { return isConnected() ? mPlanner->GetPx() : 0; }
+    double getActualYPos() const { return isConnected() ? mPlanner->GetPy() : 0; }
+    double getActualAnglePos() const { return isConnected() ? mPlanner->GetPa() : 0; }
+    double getGoalXPos() const { return isConnected() ? mPlanner->GetGx() : 0; }
+    double getGoalYPos() const { return isConnected() ? mPlanner->GetGy() : 0; }
+    double getGoalAnglePos() const { return isConnected() ? mPlanner->GetPa() : 0; }
     
 private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
