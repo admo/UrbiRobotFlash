@@ -27,12 +27,12 @@ public:
     void disconnect();
     
     // Funkcje sterujące bezpośrednio robotem
-    void setSpeed(double xSpeed, double yawSpeed);
-    void setXSpeed(double xSpeed);
-    void setYawSpeed(double yawSpeed);
-    void stopRobot();
-    double getActualXSpeed() const { return isConnected() ? mPosition->GetXSpeed() : 0; }
-    double getActualYawSpeed() const { return isConnected() ? mPosition->GetYawSpeed() : 0; }
+    void setSpeed(double xSpeed, double yawSpeed) { setXSpeed(xSpeed); setYawSpeed(yawSpeed); }
+    void setXSpeed(double xSpeed) { mXSpeed = xSpeed; }
+    void setYawSpeed(double yawSpeed) { mYawSpeed = yawSpeed; }
+    void stopRobot() { setSpeed(0.0, 0.0); }
+    double getActualXSpeed() const { return isConnected() ? mPosition->GetXSpeed() : 0.0; }
+    double getActualYawSpeed() const { return isConnected() ? mPosition->GetYawSpeed() : 0.0; }
     
     // Funkcje sterujące planerem
     void setGoalPose(double goalX, double goalY, double goalAngle);
