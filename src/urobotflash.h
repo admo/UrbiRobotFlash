@@ -17,9 +17,7 @@
 
 class URobotFlash : private boost::noncopyable, public urbi::UObject {
 public:
-    URobotFlash();
-    URobotFlash(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
-            uint port = PlayerCc::PLAYER_PORTNUM);
+    URobotFlash(const std::string& s);
     
     // Funkcje sterujące połączeniem
     bool connect(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
@@ -86,6 +84,10 @@ inline double URobotFlash::getActualXSpeed() const {
 
 inline double URobotFlash::getActualYawSpeed() const {
     return isConnected() ? mPosition->GetYawSpeed() : 0.0;
+}
+
+inline bool URobotFlash::isGoalPoseReached() const {
+    return isConnected() ? mPlanner->GetPathDone() : false;
 }
 
 inline double URobotFlash::getActualXPos() const {

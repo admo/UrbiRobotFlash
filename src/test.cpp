@@ -15,7 +15,8 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-    URobotFlash robot;
+    URobotFlash robot("aaa");
+    robot.connect();
     return 0;
 }
 
