@@ -9,6 +9,8 @@
 #include <player-2.0/libplayerc++/playerclient.h>
 #include <boost/thread/detail/thread.hpp>
 
+#include <algorithm>
+
 using namespace PlayerCc;
 using namespace std;
 using namespace urbi;
@@ -54,10 +56,8 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
 
 bool URobotFlash::connect(const std::string& hostname, uint port) {
     // Jeśli połączony, to wyłącz wątek i rozłącz
-    if(isConnected()) {
-        mURobotFlashThread->interrupt();
+    if(isConnected())
         disconnect();
-    }
     // Sprubuj się połączyć
     try {
         // Połącz z serwerem
@@ -77,7 +77,13 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
 }
 
 void URobotFlash::disconnect() {
-    
+    if(isConnected()) {
+        mURobotFlashThread->interrupt();
+        mPosition.reset(NULL);
+        mPlanner.reset(NULL);
+        mRobot.reset(NULL);
+        mIsConnected = false;
+    }
 }
 
 UStart(URobotFlash);
