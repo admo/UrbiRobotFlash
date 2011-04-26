@@ -79,13 +79,17 @@ set(URBI_ROOT_ARCHI ${DETECTED_URBI_ROOT_ARCHI}
 
 message(STATUS "URBI_ROOT_ARCHI '${URBI_ROOT_ARCHI}'")
 
-if(NOT URBI_ROOT_DIR)
-  list(APPEND _urbi_INCLUDE_SEARCH_DIR ${URBI_ROOT}/include)
+if(URBI_ROOT_DIR)
+  list(APPEND _urbi_INCLUDE_SEARCH_DIR ${URBI_ROOT_DIR}/include)
   list(APPEND _urbi_LIBRARY_SEARCH_DIR
-    ${URBI_ROOT}/bin
-    ${URBI_ROOT}/gostai/core/${URBI_ROOT_ARCHI}/engine
-    ${URBI_ROOT}/gostai/engine
-    ${URBI_ROOT}/lib
+    ${URBI_ROOT_DIR}/bin
+    ${URBI_ROOT_DIR}/gostai/core/${URBI_ROOT_ARCHI}/engine
+    ${URBI_ROOT_DIR}/gostai/engine
+    ${URBI_ROOT_DIR}/lib
+    ${URBI_ROOT_DIR}/lib/gostai
+    ${URBI_ROOT_DIR}/lib/gostai/engine
+    ${URBI_ROOT_DIR}/lib/gostai/uobjects
+    ${URBI_ROOT_DIR}/lib/gostai/uobjects/urbi
     )
   list(APPEND _urbi_EXECUTABLE_SEARCH_DIR ${URBI_ROOT}/bin)
 endif()
