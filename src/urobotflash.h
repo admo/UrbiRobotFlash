@@ -11,9 +11,13 @@
 #include <libplayerc++/playerc++.h>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #include <urbi/uobject.hh>
 
+#include <cstring>
 #include <string>
+#include <list>
+#include <algorithm>
 
 class URobotFlash : private boost::noncopyable, public urbi::UObject {
 public:
@@ -45,6 +49,8 @@ public:
     double getGoalAnglePos() const;
     
 private:
+    typedef std::list<playerc_device_info_t> DeviceInfoList;
+    
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
     boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
@@ -55,6 +61,10 @@ private:
     
     // Dane sterujące robotem
     double mXSpeed, mYawSpeed;
+    
+    // Preykat do wyszukiwania odpowiednich urządzen po nazwie
+    bool deviceNamePred(const playerc_device_info_t&, const char*) const;
+    DeviceInfoList::const_iterator findDevice(const std::list<playerc_device_info_t>&, const char*) const;
 };
 
 inline bool URobotFlash::isConnected() const {
@@ -112,6 +122,16 @@ inline double URobotFlash::getGoalYPos() const {
 
 inline double URobotFlash::getGoalAnglePos() const {
     return isConnected() ? mPlanner->GetPa() : 0;
+}
+
+inline bool URobotFlash::deviceNamePred(const playerc_device_info_t& deviceInfo, const char* deviceName) const {
+    return strcmp(deviceInfo.drivername, deviceName) == 0;
+}
+
+inline URobotFlash::DeviceInfoList::const_iterator
+URobotFlash::findDevice(const std::list<playerc_device_info_t>& deviceList, const char* deviceName) const {
+    return std::find_if(deviceList.begin(), deviceList.end(),
+            boost::bind(&URobotFlash::deviceNamePred, this, _1, deviceName));
 }
 
 #endif	/* UROBOTFLASH_H */
