@@ -17,3 +17,5 @@ set_target_properties (urobotflash PROPERTIES
   SOVERSION 0.0.1)
 
 install (TARGETS urobotflash DESTINATION lib COMPONENT libraries)
+
+configure_file (test.u.in test.u COPYONLY)
