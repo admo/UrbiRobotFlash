@@ -1,0 +1,5 @@
+var uRobotFlash = URobotFlash.new();
+uRobotFlash.connect("localhost", 6665);
+uRobotFlash.disconnect();
+shutdown;
+
