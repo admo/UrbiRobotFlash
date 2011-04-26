@@ -45,7 +45,8 @@ URobotFlash::URobotFlash(const std::string& s) :
 }
 
 void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
-    
+    if(isConnected())
+        mPlanner->SetGoalPose(goalX, goalY, goalAngle);
 }
 
 bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
