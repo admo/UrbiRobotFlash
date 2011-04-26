@@ -1,3 +1,5 @@
+set(URBI_ROOT_DIR "/usr" CACHE PATH "Urbi root directory.")
+
 find_package (PkgConfig REQUIRED)
 find_package (Urbi REQUIRED)
 
