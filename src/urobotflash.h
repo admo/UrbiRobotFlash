@@ -11,6 +11,8 @@
 #include <libplayerc++/playerc++.h>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/bind.hpp>
 #include <urbi/uobject.hh>
 
@@ -55,6 +57,9 @@ private:
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
     boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
     boost::scoped_ptr<boost::thread> mURobotFlashThread;
+    boost::mutex mURobotFlashThreadMutex;
+    
+    void threadMain();
     
     // Status połączenia
     bool mIsConnected;
@@ -77,10 +82,12 @@ inline void URobotFlash::setSpeed(double xSpeed, double yawSpeed) {
 }
 
 inline void URobotFlash::setXSpeed(double xSpeed) {
+    boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
     mXSpeed = xSpeed;
 }
 
 inline void URobotFlash::setYawSpeed(double yawSpeed) {
+    boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
     mYawSpeed = yawSpeed;
 }
 

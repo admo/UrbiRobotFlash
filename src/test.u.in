@@ -1,5 +1,6 @@
 var uRobotFlash = URobotFlash.new();
 uRobotFlash.connect("localhost", 6665);
+uRobotFlash.setSpeed(0.0, 0.5); sleep(10); uRobotFlash.setSpeed(0.0, -0.5); sleep(10);
 uRobotFlash.disconnect();
 shutdown;
 

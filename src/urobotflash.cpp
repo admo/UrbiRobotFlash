@@ -77,11 +77,14 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
         else
             mPlanner.reset(new PlannerProxy(mRobot.get(), dev->addr.index));
         
-    } catch (PlayerError&) {
+        //Stworz watek - NA KONCU!
+        mURobotFlashThread.reset(new thread(&URobotFlash::threadMain, this));
+    } catch (...) {
         // Nie udało się, rozłącz wszystko
         mPosition.reset(NULL);
         mPlanner.reset(NULL);
         mRobot.reset(NULL);
+        mURobotFlashThread.reset(NULL);
         return (mIsConnected = false);
     }
     return (mIsConnected = true);
@@ -89,11 +92,32 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
 
 void URobotFlash::disconnect() {
     if(isConnected()) {
-//        mURobotFlashThread->interrupt();
+        mURobotFlashThread->interrupt();
+        mURobotFlashThread->join();
+        mURobotFlashThread.reset(NULL);
         mPosition.reset(NULL);
         mPlanner.reset(NULL);
         mRobot.reset(NULL);
         mIsConnected = false;
+    }
+}
+
+void URobotFlash::threadMain() {
+    posix_time::milliseconds workTime(10);
+    while(true) {
+        {
+            mURobotFlashThreadMutex.lock();
+            mPosition->SetSpeed(mXSpeed, mYawSpeed);
+            mURobotFlashThreadMutex.unlock();
+        }
+        
+        try {
+            this_thread::sleep(workTime);
+        } catch(thread_interrupted&) {
+            lock_guard<mutex> lock(mURobotFlashThreadMutex);
+            mPosition->SetSpeed(0.0, 0.0);
+            return;
+        }
     }
 }
 
