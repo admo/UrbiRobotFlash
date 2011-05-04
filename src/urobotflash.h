@@ -51,12 +51,16 @@ public:
     double getGoalYPos() const;
     double getGoalAnglePos() const;
     
+    // Funkcje sterujące lokalizatorem
+    void setPose(double x, double y, double yaw);
+    
 private:
     typedef std::list<playerc_device_info_t> DeviceInfoList;
     
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
-    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;  
+    boost::scoped_ptr<PlayerCc::LocalizeProxy> mLocalize;
     boost::thread mSpeedControlThread;
     boost::mutex mURobotFlashThreadMutex;
     
@@ -143,6 +147,14 @@ inline double URobotFlash::getGoalAnglePos() const {
 
 inline bool URobotFlash::deviceNamePred(const playerc_device_info_t& deviceInfo, const char* deviceName) const {
     return strcmp(deviceInfo.drivername, deviceName) == 0;
+}
+
+inline void URobotFlash::setPose(double x, double y, double yaw) {
+    if(isConnected()) {
+        double pos[3] = {x, y, yaw};
+        double cov[3] = {0.5, 0.5, 0.5};
+        mLocalize->SetPose(pos, cov);
+    }
 }
 
 inline URobotFlash::DeviceInfoList::const_iterator

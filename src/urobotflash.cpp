@@ -8,6 +8,7 @@
 #include "urobotflash.h"
 
 #include <iostream>
+#include <player-2.0/libplayercore/player.h>
 
 using namespace PlayerCc;
 using namespace std;
@@ -19,6 +20,7 @@ URobotFlash::URobotFlash(const std::string& s) :
         mRobot(NULL),
         mPosition(NULL),
         mPlanner(NULL),
+        mLocalize(NULL),
         mIsConnected(false),
         mXSpeed(0.0), mYawSpeed(0.0),
         mCurrentControllerType(SpeedController),
@@ -44,6 +46,8 @@ URobotFlash::URobotFlash(const std::string& s) :
     UBindFunction(URobotFlash, getGoalXPos);
     UBindFunction(URobotFlash, getGoalYPos);
     UBindFunction(URobotFlash, getGoalAnglePos);
+    
+    UBindFunction(URobotFlash, setPose);
 }
 
 URobotFlash::~URobotFlash() {
@@ -87,6 +91,11 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
         else
             mPlanner.reset(new PlannerProxy(mRobot.get(), dev->addr.index));
         
+        if ((dev = findDevice(deviceInfoList, "amcl")) == deviceInfoList.end())
+            throw PlayerError();
+        else
+            mLocalize.reset(new LocalizeProxy(mRobot.get(), dev->addr.index));
+        
         //Stworz watek - NA KONCU!
         mPlanner->SetEnable(false);
         mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
@@ -104,6 +113,7 @@ void URobotFlash::disconnect() {
     if(isConnected()) {
         mSpeedControlThread.interrupt();
         mSpeedControlThread.join();
+        mLocalize.reset(NULL);
         mPosition.reset(NULL);
         mPlanner.reset(NULL);
         mRobot.reset(NULL);
