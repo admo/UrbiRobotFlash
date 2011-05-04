@@ -7,6 +7,8 @@
 
 #include "urobotflash.h"
 
+#include <iostream>
+
 using namespace PlayerCc;
 using namespace std;
 using namespace urbi;
@@ -44,9 +46,20 @@ URobotFlash::URobotFlash(const std::string& s) :
     UBindFunction(URobotFlash, getGoalAnglePos);
 }
 
+URobotFlash::~URobotFlash() {
+    disconnect();
+}
+
 void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
-    if(isConnected())
-        mPlanner->SetGoalPose(goalX, goalY, goalAngle);
+    if(!isConnected())
+        return;
+    
+    if(!mIsNavEnabled) {
+        mIsNavEnabled = true;
+        mPlanner->SetEnable(true);
+        mBlockNavPos.lock();
+    }
+    mPlanner->SetGoalPose(goalX, goalY, goalAngle);
 }
 
 bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
@@ -107,9 +120,9 @@ void URobotFlash::threadMain() {
     posix_time::milliseconds workTime(10);
     while(true) {
         {
-            mURobotFlashThreadMutex.lock();
+            mBlockNavPos.lock(); mURobotFlashThreadMutex.lock();
             mPosition->SetSpeed(mXSpeed, mYawSpeed);
-            mURobotFlashThreadMutex.unlock();
+            mBlockNavPos.unlock(); mURobotFlashThreadMutex.unlock();
         }
         
         try {

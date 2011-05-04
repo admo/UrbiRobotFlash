@@ -24,6 +24,7 @@
 class URobotFlash : private boost::noncopyable, public urbi::UObject {
 public:
     URobotFlash(const std::string& s);
+    ~URobotFlash();
     
     // Funkcje sterujące połączeniem
     bool connect(const std::string& hostname = PlayerCc::PLAYER_HOSTNAME,
@@ -58,6 +59,8 @@ private:
     boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
     boost::scoped_ptr<boost::thread> mURobotFlashThread;
     boost::mutex mURobotFlashThreadMutex;
+    boost::mutex mBlockNavPos;
+    bool mIsNavEnabled;
     
     void threadMain();
     
@@ -82,13 +85,27 @@ inline void URobotFlash::setSpeed(double xSpeed, double yawSpeed) {
 }
 
 inline void URobotFlash::setXSpeed(double xSpeed) {
+    if(!isConnected())
+        return;
+    
     boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
     mXSpeed = xSpeed;
+    if(mIsNavEnabled) {
+        mBlockNavPos.unlock();
+        mPlanner->SetEnable(false);
+    }
 }
 
 inline void URobotFlash::setYawSpeed(double yawSpeed) {
+    if(!isConnected())
+        return;
+    
     boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
     mYawSpeed = yawSpeed;
+    if(mIsNavEnabled) {
+        mBlockNavPos.unlock();
+        mPlanner->SetEnable(false);
+    }
 }
 
 inline void URobotFlash::stopRobot() {

@@ -1,6 +1,18 @@
 var uRobotFlash = URobotFlash.new();
 uRobotFlash.connect("localhost", 6665);
-uRobotFlash.setSpeed(0.0, 0.5); sleep(10); uRobotFlash.setSpeed(0.0, -0.5); sleep(10);
+echo("Jazda do przodu z predkoscia 0.5m/s przez 5s");
+uRobotFlash.setSpeed(0.5, 0.0); sleep(5);
+
+echo("Jazda do tylu z predkoscia 0.5m/s przez 5s");
+uRobotFlash.setSpeed(-0.5, 0.0); sleep(5);
+
+echo("Jazda do punku 0.5 0.5 0.0 przez 5s");
+uRobotFlash.setGoalPose(-1.12, 2.45, 3.1415); sleep(5);
+
+echo("Jazda do przodu z predkoscia 0.5m/s przez 5s");
+uRobotFlash.setSpeed(0.5, 0.0); sleep(5);
+
+echo("Koniec");
 uRobotFlash.disconnect();
 shutdown;
 
