@@ -93,6 +93,7 @@ inline void URobotFlash::setXSpeed(double xSpeed) {
     if(mIsNavEnabled) {
         mBlockNavPos.unlock();
         mPlanner->SetEnable(false);
+        mIsNavEnabled = false;
     }
 }
 
@@ -105,6 +106,7 @@ inline void URobotFlash::setYawSpeed(double yawSpeed) {
     if(mIsNavEnabled) {
         mBlockNavPos.unlock();
         mPlanner->SetEnable(false);
+        mIsNavEnabled = false;
     }
 }
 
