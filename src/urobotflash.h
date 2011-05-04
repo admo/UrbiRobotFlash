@@ -122,27 +122,27 @@ inline bool URobotFlash::isGoalPoseReached() const {
 }
 
 inline double URobotFlash::getActualXPos() const {
-    return isConnected() ? mPlanner->GetPx() : 0;
+    return isConnected() ? mPlanner->GetPose().px : 0.0;
 }
 
 inline double URobotFlash::getActualYPos() const {
-    return isConnected() ? mPlanner->GetPy() : 0;
+    return isConnected() ? mPlanner->GetPose().py : 0.0;
 }
 
 inline double URobotFlash::getActualAnglePos() const {
-    return isConnected() ? mPlanner->GetPa() : 0;
+    return isConnected() ? mPlanner->GetPose().pa : 0.0;
 }
 
 inline double URobotFlash::getGoalXPos() const {
-    return isConnected() ? mPlanner->GetGx() : 0;
+    return isConnected() ? mPlanner->GetGoal().px : 0.0;
 }
 
 inline double URobotFlash::getGoalYPos() const {
-    return isConnected() ? mPlanner->GetGy() : 0;
+    return isConnected() ? mPlanner->GetGoal().py : 0.0;
 }
 
 inline double URobotFlash::getGoalAnglePos() const {
-    return isConnected() ? mPlanner->GetPa() : 0;
+    return isConnected() ? mPlanner->GetGoal().pa : 0.0;
 }
 
 inline bool URobotFlash::deviceNamePred(const playerc_device_info_t& deviceInfo, const char* deviceName) const {

@@ -7,6 +7,8 @@
 
 #include "urobotflash.h"
 
+#include <cmath>
+
 #include <iostream>
 #include <player-2.0/libplayercore/player.h>
 
@@ -38,7 +40,7 @@ URobotFlash::URobotFlash(const std::string& s) :
     UBindFunction(URobotFlash, getActualYawSpeed);
     
     UBindFunction(URobotFlash, setGoalPose);
-    UBindFunction(URobotFlash, goToGoalPose);
+    UBindThreadedFunction(URobotFlash, goToGoalPose, LOCK_INSTANCE);
     UBindFunction(URobotFlash, isGoalPoseReached);
     UBindFunction(URobotFlash, getActualXPos);
     UBindFunction(URobotFlash, getActualYPos);
@@ -63,7 +65,19 @@ void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
 }
 
 bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
+    if(!isConnected())
+        return false;
     
+    setGoalPose(goalX, goalY, goalAngle);
+    posix_time::milliseconds sleepTime(100);
+    double epsilon = 0.05;
+    while(true) {
+        this_thread::sleep(sleepTime);
+        mPlanner->RequestWaypoints();
+        if(mPlanner->GetWaypointCount() == 0) {
+            return (getActualXPos()-getGoalXPos() < epsilon) && (getActualYPos()-getGoalYPos() < epsilon) && (getActualAnglePos()-getGoalAnglePos() < epsilon);
+        }
+    }
 }
 
 bool URobotFlash::connect(const std::string& hostname, uint port) {
