@@ -19,9 +19,9 @@ URobotFlash::URobotFlash(const std::string& s) :
         mRobot(NULL),
         mPosition(NULL),
         mPlanner(NULL),
-        mURobotFlashThread(NULL),
         mIsConnected(false),
         mXSpeed(0.0), mYawSpeed(0.0),
+        mCurrentControllerType(SpeedController),
         UObject(s)
 {
     UBindFunction(URobotFlash, connect);
@@ -54,11 +54,7 @@ void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
     if(!isConnected())
         return;
     
-    if(!mIsNavEnabled) {
-        mIsNavEnabled = true;
-        mPlanner->SetEnable(true);
-        mBlockNavPos.lock();
-    }
+    switchController(NavigationController);
     mPlanner->SetGoalPose(goalX, goalY, goalAngle);
 }
 
@@ -92,13 +88,13 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
             mPlanner.reset(new PlannerProxy(mRobot.get(), dev->addr.index));
         
         //Stworz watek - NA KONCU!
-        mURobotFlashThread.reset(new thread(&URobotFlash::threadMain, this));
+        mPlanner->SetEnable(false);
+        mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
     } catch (...) {
         // Nie udało się, rozłącz wszystko
         mPosition.reset(NULL);
         mPlanner.reset(NULL);
         mRobot.reset(NULL);
-        mURobotFlashThread.reset(NULL);
         return (mIsConnected = false);
     }
     return (mIsConnected = true);
@@ -106,9 +102,8 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
 
 void URobotFlash::disconnect() {
     if(isConnected()) {
-        mURobotFlashThread->interrupt();
-        mURobotFlashThread->join();
-        mURobotFlashThread.reset(NULL);
+        mSpeedControlThread.interrupt();
+        mSpeedControlThread.join();
         mPosition.reset(NULL);
         mPlanner.reset(NULL);
         mRobot.reset(NULL);
@@ -116,13 +111,13 @@ void URobotFlash::disconnect() {
     }
 }
 
-void URobotFlash::threadMain() {
+void URobotFlash::speedControlThread() {
     posix_time::milliseconds workTime(10);
     while(true) {
         {
-            mBlockNavPos.lock(); mURobotFlashThreadMutex.lock();
+            mURobotFlashThreadMutex.lock();
             mPosition->SetSpeed(mXSpeed, mYawSpeed);
-            mBlockNavPos.unlock(); mURobotFlashThreadMutex.unlock();
+            mURobotFlashThreadMutex.unlock();
         }
         
         try {
@@ -132,6 +127,22 @@ void URobotFlash::threadMain() {
             mPosition->SetSpeed(0.0, 0.0);
             return;
         }
+    }
+}
+
+void URobotFlash::switchController(ControllerType controllerType) {
+    if (mCurrentControllerType == NavigationController && controllerType == SpeedController) {
+        mPlanner->SetEnable(false);
+        mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
+        mCurrentControllerType = SpeedController;
+        return;
+    }
+    else if (mCurrentControllerType == SpeedController && controllerType == NavigationController) {
+        mSpeedControlThread.interrupt();
+        mSpeedControlThread.join();
+        mPlanner->SetEnable(true);
+        mCurrentControllerType = NavigationController;
+        return;
     }
 }
 

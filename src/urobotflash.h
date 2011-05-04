@@ -57,12 +57,14 @@ private:
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
     boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;    
-    boost::scoped_ptr<boost::thread> mURobotFlashThread;
+    boost::thread mSpeedControlThread;
     boost::mutex mURobotFlashThreadMutex;
-    boost::mutex mBlockNavPos;
-    bool mIsNavEnabled;
     
-    void threadMain();
+    void speedControlThread();
+    
+    enum ControllerType {SpeedController, NavigationController};
+    ControllerType mCurrentControllerType;
+    void switchController(ControllerType controllerType);
     
     // Status połączenia
     bool mIsConnected;
@@ -87,27 +89,16 @@ inline void URobotFlash::setSpeed(double xSpeed, double yawSpeed) {
 inline void URobotFlash::setXSpeed(double xSpeed) {
     if(!isConnected())
         return;
-    
-    boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
+    switchController(SpeedController);
     mXSpeed = xSpeed;
-    if(mIsNavEnabled) {
-        mBlockNavPos.unlock();
-        mPlanner->SetEnable(false);
-        mIsNavEnabled = false;
-    }
 }
 
 inline void URobotFlash::setYawSpeed(double yawSpeed) {
     if(!isConnected())
         return;
     
-    boost::lock_guard<boost::mutex> lock(mURobotFlashThreadMutex);
+    switchController(SpeedController);
     mYawSpeed = yawSpeed;
-    if(mIsNavEnabled) {
-        mBlockNavPos.unlock();
-        mPlanner->SetEnable(false);
-        mIsNavEnabled = false;
-    }
 }
 
 inline void URobotFlash::stopRobot() {
