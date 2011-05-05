@@ -13,6 +13,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/algorithm/minmax_element.hpp>
 #include <boost/bind.hpp>
 #include <urbi/uobject.hh>
 
@@ -54,13 +55,20 @@ public:
     // Funkcje sterujące lokalizatorem
     void setPose(double x, double y, double yaw);
     
+    // Funkcje sterujące laserem
+    double getMinDist() const;
+    double getMaxDist() const;
+    std::vector<double> getDist() const;
+    
 private:
     typedef std::list<playerc_device_info_t> DeviceInfoList;
     
-    boost::scoped_ptr<PlayerCc::PlayerClient> mRobot;
-    boost::scoped_ptr<PlayerCc::Position2dProxy> mPosition;
-    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlanner;  
-    boost::scoped_ptr<PlayerCc::LocalizeProxy> mLocalize;
+    boost::scoped_ptr<PlayerCc::PlayerClient> mRobotProxy;
+    boost::scoped_ptr<PlayerCc::Position2dProxy> mSpeedControllerProxy;
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlannerProxy;  
+    boost::scoped_ptr<PlayerCc::LocalizeProxy> mLocalizeProxy;
+    boost::scoped_ptr<PlayerCc::Position2dProxy> mPositionProxy;
+    boost::scoped_ptr<PlayerCc::LaserProxy> mLaserProxy;
     boost::thread mSpeedControlThread;
     boost::mutex mURobotFlashThreadMutex;
     
@@ -69,7 +77,7 @@ private:
     enum ControllerType {SpeedController, NavigationController};
     ControllerType mCurrentControllerType;
     void switchController(ControllerType controllerType);
-    
+        
     // Status połączenia
     bool mIsConnected;
     
@@ -77,8 +85,8 @@ private:
     double mXSpeed, mYawSpeed;
     
     // Preykat do wyszukiwania odpowiednich urządzen po nazwie
-    bool deviceNamePred(const playerc_device_info_t&, const char*) const;
-    DeviceInfoList::const_iterator findDevice(const std::list<playerc_device_info_t>&, const char*) const;
+    bool deviceNamePred(const playerc_device_info_t&, const char*, uint16_t deviceType) const;
+    DeviceInfoList::const_iterator findDevice(const std::list<playerc_device_info_t>&, const char*, uint16_t deviceType) const;
 };
 
 inline bool URobotFlash::isConnected() const {
@@ -110,57 +118,41 @@ inline void URobotFlash::stopRobot() {
 }
 
 inline double URobotFlash::getActualXSpeed() const {
-    return isConnected() ? mPosition->GetXSpeed() : 0.0;
+    return isConnected() ? mSpeedControllerProxy->GetXSpeed() : 0.0;
 }
 
 inline double URobotFlash::getActualYawSpeed() const {
-    return isConnected() ? mPosition->GetYawSpeed() : 0.0;
-}
-
-inline bool URobotFlash::isGoalPoseReached() const {
-    return isConnected() ? mPlanner->GetPathDone() : false;
-}
-
-inline double URobotFlash::getActualXPos() const {
-    return isConnected() ? mPlanner->GetPose().px : 0.0;
-}
-
-inline double URobotFlash::getActualYPos() const {
-    return isConnected() ? mPlanner->GetPose().py : 0.0;
-}
-
-inline double URobotFlash::getActualAnglePos() const {
-    return isConnected() ? mPlanner->GetPose().pa : 0.0;
+    return isConnected() ? mSpeedControllerProxy->GetYawSpeed() : 0.0;
 }
 
 inline double URobotFlash::getGoalXPos() const {
-    return isConnected() ? mPlanner->GetGoal().px : 0.0;
+    return isConnected() ? mPlannerProxy->GetGoal().px : 0.0;
 }
 
 inline double URobotFlash::getGoalYPos() const {
-    return isConnected() ? mPlanner->GetGoal().py : 0.0;
+    return isConnected() ? mPlannerProxy->GetGoal().py : 0.0;
 }
 
 inline double URobotFlash::getGoalAnglePos() const {
-    return isConnected() ? mPlanner->GetGoal().pa : 0.0;
+    return isConnected() ? mPlannerProxy->GetGoal().pa : 0.0;
 }
 
-inline bool URobotFlash::deviceNamePred(const playerc_device_info_t& deviceInfo, const char* deviceName) const {
-    return strcmp(deviceInfo.drivername, deviceName) == 0;
+inline bool URobotFlash::deviceNamePred(const playerc_device_info_t& deviceInfo, const char* deviceName, uint16_t deviceType) const {
+    return strcmp(deviceInfo.drivername, deviceName) == 0 && deviceInfo.addr.interf == deviceType;
 }
 
 inline void URobotFlash::setPose(double x, double y, double yaw) {
     if(isConnected()) {
         double pos[3] = {x, y, yaw};
         double cov[3] = {0.5, 0.5, 0.5};
-        mLocalize->SetPose(pos, cov);
+        mLocalizeProxy->SetPose(pos, cov);
     }
 }
 
 inline URobotFlash::DeviceInfoList::const_iterator
-URobotFlash::findDevice(const std::list<playerc_device_info_t>& deviceList, const char* deviceName) const {
+URobotFlash::findDevice(const std::list<playerc_device_info_t>& deviceList, const char* deviceName, uint16_t deviceType) const {
     return std::find_if(deviceList.begin(), deviceList.end(),
-            boost::bind(&URobotFlash::deviceNamePred, this, _1, deviceName));
+            boost::bind(&URobotFlash::deviceNamePred, this, _1, deviceName, deviceType));
 }
 
 #endif	/* UROBOTFLASH_H */

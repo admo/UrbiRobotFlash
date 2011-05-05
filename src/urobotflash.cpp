@@ -8,7 +8,7 @@
 #include "urobotflash.h"
 
 #include <cmath>
-
+#include <cstring>
 #include <iostream>
 #include <player-2.0/libplayercore/player.h>
 
@@ -19,10 +19,12 @@ using namespace boost;
 
 
 URobotFlash::URobotFlash(const std::string& s) :
-        mRobot(NULL),
-        mPosition(NULL),
-        mPlanner(NULL),
-        mLocalize(NULL),
+        mRobotProxy(NULL),
+        mSpeedControllerProxy(NULL),
+        mPlannerProxy(NULL),
+        mLocalizeProxy(NULL),
+        mPositionProxy(NULL),
+        mLaserProxy(NULL),
         mIsConnected(false),
         mXSpeed(0.0), mYawSpeed(0.0),
         mCurrentControllerType(SpeedController),
@@ -40,7 +42,7 @@ URobotFlash::URobotFlash(const std::string& s) :
     UBindFunction(URobotFlash, getActualYawSpeed);
     
     UBindFunction(URobotFlash, setGoalPose);
-    UBindThreadedFunction(URobotFlash, goToGoalPose, LOCK_INSTANCE);
+    UBindThreadedFunction(URobotFlash, goToGoalPose, LOCK_NONE);
     UBindFunction(URobotFlash, isGoalPoseReached);
     UBindFunction(URobotFlash, getActualXPos);
     UBindFunction(URobotFlash, getActualYPos);
@@ -50,6 +52,10 @@ URobotFlash::URobotFlash(const std::string& s) :
     UBindFunction(URobotFlash, getGoalAnglePos);
     
     UBindFunction(URobotFlash, setPose);
+    
+    UBindFunction(URobotFlash, getMinDist);
+    UBindFunction(URobotFlash, getMaxDist);
+    UBindFunction(URobotFlash, getDist);
 }
 
 URobotFlash::~URobotFlash() {
@@ -61,22 +67,29 @@ void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
         return;
     
     switchController(NavigationController);
-    mPlanner->SetGoalPose(goalX, goalY, goalAngle);
+    mPlannerProxy->SetGoalPose(goalX, goalY, goalAngle);
 }
 
 bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
     if(!isConnected())
         return false;
     
+    int waitIter = 10;
+    posix_time::milliseconds sleepTime(200);
+    
+    stopRobot();
+    this_thread::sleep(sleepTime);
+    
+    sleepTime = posix_time::milliseconds(100);
     setGoalPose(goalX, goalY, goalAngle);
-    posix_time::milliseconds sleepTime(100);
-    double epsilon = 0.05;
     while(true) {
         this_thread::sleep(sleepTime);
-        mPlanner->RequestWaypoints();
-        if(mPlanner->GetWaypointCount() == 0) {
-            return (getActualXPos()-getGoalXPos() < epsilon) && (getActualYPos()-getGoalYPos() < epsilon) && (getActualAnglePos()-getGoalAnglePos() < epsilon);
-        }
+        if(mPlannerProxy->GetPathValid() == 0 && (--waitIter) == 0)
+            return false;
+        else if (mPlannerProxy->GetPathDone() != 0)
+            return true;
+        else if (mCurrentControllerType != NavigationController)
+            return false;
     }
 }
 
@@ -87,37 +100,53 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
     // Sprubuj się połączyć
     try {
         // Połącz z serwerem
-        mRobot.reset(new PlayerClient(hostname, port)); // Jeśli się nie powiedzie to catch;
+        mRobotProxy.reset(new PlayerClient(hostname, port)); // Jeśli się nie powiedzie to catch;
         // Pobierz listę urządzeń
-        mRobot->RequestDeviceList();
-        DeviceInfoList deviceInfoList = mRobot->GetDeviceList();
+        mRobotProxy->RequestDeviceList();
+        DeviceInfoList deviceInfoList = mRobotProxy->GetDeviceList();
         
         // Należy znaleźć p2os lub flash i wavefront
         DeviceInfoList::const_iterator dev;
-        if ((dev = findDevice(deviceInfoList, "p2os")) == deviceInfoList.end()
-                && (dev = findDevice(deviceInfoList, "flash")) == deviceInfoList.end())
+        if ((dev = findDevice(deviceInfoList, "p2os", PLAYER_POSITION2D_CODE)) == deviceInfoList.end()
+                && (dev = findDevice(deviceInfoList, "flash", PLAYER_POSITION2D_CODE)) == deviceInfoList.end())
             throw PlayerError();
         else
-            mPosition.reset(new Position2dProxy(mRobot.get(), dev->addr.index));
+            mSpeedControllerProxy.reset(new Position2dProxy(mRobotProxy.get(), dev->addr.index));
         
-        if ((dev = findDevice(deviceInfoList, "wavefront")) == deviceInfoList.end())
+        if ((dev = findDevice(deviceInfoList, "wavefront", PLAYER_PLANNER_CODE)) == deviceInfoList.end())
             throw PlayerError();
         else
-            mPlanner.reset(new PlannerProxy(mRobot.get(), dev->addr.index));
+            mPlannerProxy.reset(new PlannerProxy(mRobotProxy.get(), dev->addr.index));
         
-        if ((dev = findDevice(deviceInfoList, "amcl")) == deviceInfoList.end())
+        if ((dev = findDevice(deviceInfoList, "amcl", PLAYER_LOCALIZE_CODE)) == deviceInfoList.end())
             throw PlayerError();
         else
-            mLocalize.reset(new LocalizeProxy(mRobot.get(), dev->addr.index));
+            mLocalizeProxy.reset(new LocalizeProxy(mRobotProxy.get(), dev->addr.index));
+        
+        if ((dev = findDevice(deviceInfoList, "amcl", PLAYER_POSITION2D_CODE)) == deviceInfoList.end())
+            throw PlayerError();
+        else
+            mPositionProxy.reset(new Position2dProxy(mRobotProxy.get(), dev->addr.index));
+        
+        if ((dev = findDevice(deviceInfoList, "urg", PLAYER_LASER_CODE)) == deviceInfoList.end())
+            throw PlayerError();
+        else
+            mLaserProxy.reset(new LaserProxy(mRobotProxy.get(), dev->addr.index));
         
         //Stworz watek - NA KONCU!
-        mPlanner->SetEnable(false);
+        mPlannerProxy->SetEnable(false);
+        mPositionProxy->RequestGeom();
         mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
+        mRobotProxy->Read();
+        mRobotProxy->StartThread();
     } catch (...) {
         // Nie udało się, rozłącz wszystko
-        mPosition.reset(NULL);
-        mPlanner.reset(NULL);
-        mRobot.reset(NULL);
+        mSpeedControllerProxy.reset(NULL);
+        mPlannerProxy.reset(NULL);
+        mPositionProxy.reset(NULL);
+        mLocalizeProxy.reset(NULL);
+        mLaserProxy.reset(NULL);
+        mRobotProxy.reset(NULL);
         return (mIsConnected = false);
     }
     return (mIsConnected = true);
@@ -127,10 +156,13 @@ void URobotFlash::disconnect() {
     if(isConnected()) {
         mSpeedControlThread.interrupt();
         mSpeedControlThread.join();
-        mLocalize.reset(NULL);
-        mPosition.reset(NULL);
-        mPlanner.reset(NULL);
-        mRobot.reset(NULL);
+        mLocalizeProxy.reset(NULL);
+        mSpeedControllerProxy.reset(NULL);
+        mPlannerProxy.reset(NULL);
+        mPositionProxy.reset(NULL);
+        mLaserProxy.reset(NULL);
+        mRobotProxy->StopThread();
+        mRobotProxy.reset(NULL);
         mIsConnected = false;
     }
 }
@@ -140,7 +172,7 @@ void URobotFlash::speedControlThread() {
     while(true) {
         {
             mURobotFlashThreadMutex.lock();
-            mPosition->SetSpeed(mXSpeed, mYawSpeed);
+            mSpeedControllerProxy->SetSpeed(mXSpeed, mYawSpeed);
             mURobotFlashThreadMutex.unlock();
         }
         
@@ -148,7 +180,7 @@ void URobotFlash::speedControlThread() {
             this_thread::sleep(workTime);
         } catch(thread_interrupted&) {
             lock_guard<mutex> lock(mURobotFlashThreadMutex);
-            mPosition->SetSpeed(0.0, 0.0);
+            mSpeedControllerProxy->SetSpeed(0.0, 0.0);
             return;
         }
     }
@@ -156,7 +188,7 @@ void URobotFlash::speedControlThread() {
 
 void URobotFlash::switchController(ControllerType controllerType) {
     if (mCurrentControllerType == NavigationController && controllerType == SpeedController) {
-        mPlanner->SetEnable(false);
+        mPlannerProxy->SetEnable(false);
         mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
         mCurrentControllerType = SpeedController;
         return;
@@ -164,10 +196,52 @@ void URobotFlash::switchController(ControllerType controllerType) {
     else if (mCurrentControllerType == SpeedController && controllerType == NavigationController) {
         mSpeedControlThread.interrupt();
         mSpeedControlThread.join();
-        mPlanner->SetEnable(true);
+        mPlannerProxy->SetEnable(true);
         mCurrentControllerType = NavigationController;
         return;
     }
+}
+
+inline bool URobotFlash::isGoalPoseReached() const {
+    return isConnected() ? mPlannerProxy->GetPathDone() : false;
+}
+
+inline double URobotFlash::getActualXPos() const {
+    return isConnected() ? mPositionProxy->GetXPos() : 0.0;
+}
+
+inline double URobotFlash::getActualYPos() const {
+    return isConnected() ? mPositionProxy->GetYPos() : 0.0;
+}
+
+inline double URobotFlash::getActualAnglePos() const {
+    return isConnected() ? mPositionProxy->GetYaw() : 0.0;
+}
+
+double URobotFlash::getMinDist() const {
+    if(!isConnected())
+        return 0.0;
+    
+    vector<double> dist = getDist();
+    return *min_element(dist.begin(), dist.end());
+}
+
+inline double URobotFlash::getMaxDist() const {
+    if(!isConnected())
+        return 0.0;
+    
+    vector<double> dist = getDist();
+    return *max_element(dist.begin(), dist.end());
+}
+
+vector<double> URobotFlash::getDist() const {
+    vector<double> dist(mLaserProxy->GetCount());
+    
+    for (int i = 0; i < dist.size(); ++i) {
+        dist[i] = mLaserProxy->operator [](i);
+    }
+    
+    return dist;
 }
 
 UStart(URobotFlash);
