@@ -10,7 +10,6 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <player-2.0/libplayercore/player.h>
 
 using namespace PlayerCc;
 using namespace std;
@@ -82,6 +81,15 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
     
     sleepTime = posix_time::milliseconds(100);
     setGoalPose(goalX, goalY, goalAngle);
+    // Trzeba z piec razy czytac dane;
+    for (int i = 0; i < 5; ++i) {
+        volatile double tmp;
+        tmp = mPlannerProxy->GetPathValid();
+        tmp = mPlannerProxy->GetPathDone();
+        this_thread::sleep(sleepTime);
+    }
+    
+    // Glowna petla oczekiwania
     while(true) {
         this_thread::sleep(sleepTime);
         if(mPlannerProxy->GetPathValid() == 0 && (--waitIter) == 0)
@@ -154,6 +162,7 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
 
 void URobotFlash::disconnect() {
     if(isConnected()) {
+        stopRobot();
         mSpeedControlThread.interrupt();
         mSpeedControlThread.join();
         mLocalizeProxy.reset(NULL);
