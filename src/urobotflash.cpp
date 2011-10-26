@@ -74,24 +74,23 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
         return false;
     
     int waitIter = 10;
-    posix_time::milliseconds sleepTime(200);
     
     stopRobot();
-    this_thread::sleep(sleepTime);
+    this_thread::sleep(posix_time::milliseconds(200));
     
-    sleepTime = posix_time::milliseconds(100);
     setGoalPose(goalX, goalY, goalAngle);
     // Trzeba z piec razy czytac dane;
     for (int i = 0; i < 5; ++i) {
         volatile double tmp;
         tmp = mPlannerProxy->GetPathValid();
         tmp = mPlannerProxy->GetPathDone();
-        this_thread::sleep(sleepTime);
+        this_thread::sleep(posix_time::milliseconds(100));
     }
     
     // Glowna petla oczekiwania
     while(true) {
-        this_thread::sleep(sleepTime);
+	std:cerr << "URobotFlash::goToGoalPose" << std::endl;
+        this_thread::sleep(posix_time::milliseconds(100));
         if(mPlannerProxy->GetPathValid() == 0 && (--waitIter) == 0)
             return false;
         else if (mPlannerProxy->GetPathDone() != 0)
@@ -136,7 +135,8 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
         else
             mPositionProxy.reset(new Position2dProxy(mRobotProxy.get(), dev->addr.index));
         
-        if ((dev = findDevice(deviceInfoList, "urg", PLAYER_LASER_CODE)) == deviceInfoList.end())
+        if ((dev = findDevice(deviceInfoList, "urg", PLAYER_LASER_CODE)) == deviceInfoList.end()
+                && (dev = findDevice(deviceInfoList, "sicklms200", PLAYER_LASER_CODE)) == deviceInfoList.end())
             throw PlayerError();
         else
             mLaserProxy.reset(new LaserProxy(mRobotProxy.get(), dev->addr.index));
@@ -146,7 +146,7 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
         mPositionProxy->RequestGeom();
         mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
         mRobotProxy->Read();
-        mRobotProxy->StartThread();
+        //mRobotProxy->StartThread();
     } catch (...) {
         // Nie udało się, rozłącz wszystko
         mSpeedControllerProxy.reset(NULL);
@@ -170,14 +170,13 @@ void URobotFlash::disconnect() {
         mPlannerProxy.reset(NULL);
         mPositionProxy.reset(NULL);
         mLaserProxy.reset(NULL);
-        mRobotProxy->StopThread();
+        //mRobotProxy->StopThread();
         mRobotProxy.reset(NULL);
         mIsConnected = false;
     }
 }
 
 void URobotFlash::speedControlThread() {
-    posix_time::milliseconds workTime(10);
     while(true) {
         {
             mURobotFlashThreadMutex.lock();
@@ -186,7 +185,7 @@ void URobotFlash::speedControlThread() {
         }
         
         try {
-            this_thread::sleep(workTime);
+            this_thread::sleep(posix_time::milliseconds(10));
         } catch(thread_interrupted&) {
             lock_guard<mutex> lock(mURobotFlashThreadMutex);
             mSpeedControllerProxy->SetSpeed(0.0, 0.0);
