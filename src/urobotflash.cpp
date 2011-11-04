@@ -80,7 +80,7 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
     
     setGoalPose(goalX, goalY, goalAngle);
     // Trzeba z piec razy czytac dane;
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 10; ++i) {
         volatile double tmp;
         tmp = mPlannerProxy->GetPathValid();
         tmp = mPlannerProxy->GetPathDone();
