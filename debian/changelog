@@ -1,3 +1,9 @@
+liburbirobotflash2.7 (0.0.1-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * Wlaczenie watka PlayerClient
+
+ -- Adam Oleksy <adam.oleksy@pwr.wroc.pl>  Fri, 04 Nov 2011 14:54:51 +0100
+
 liburbirobotflash2.7 (0.0.1-0ubuntu1~2.gbpcd9646) lucid; urgency=low
 
   ** SNAPSHOT build @cd9646600019b960d4215449609a164b7fecee2a **
