@@ -89,7 +89,6 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
     
     // Glowna petla oczekiwania
     while(true) {
-	std:cerr << "URobotFlash::goToGoalPose" << std::endl;
         this_thread::sleep(posix_time::milliseconds(100));
         if(mPlannerProxy->GetPathValid() == 0 && (--waitIter) == 0)
             return false;
