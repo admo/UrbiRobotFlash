@@ -145,8 +145,7 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
         mPlannerProxy->SetEnable(false);
         mPositionProxy->RequestGeom();
         mSpeedControlThread = thread(&URobotFlash::speedControlThread, this);
-        mRobotProxy->Read();
-        //mRobotProxy->StartThread();
+        mRobotProxy->StartThread();
     } catch (...) {
         // Nie udało się, rozłącz wszystko
         mSpeedControllerProxy.reset(NULL);
@@ -170,7 +169,7 @@ void URobotFlash::disconnect() {
         mPlannerProxy.reset(NULL);
         mPositionProxy.reset(NULL);
         mLaserProxy.reset(NULL);
-        //mRobotProxy->StopThread();
+        mRobotProxy->StopThread();
         mRobotProxy.reset(NULL);
         mIsConnected = false;
     }
