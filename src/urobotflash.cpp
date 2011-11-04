@@ -107,6 +107,7 @@ bool URobotFlash::connect(const std::string& hostname, uint port) {
     try {
         // Połącz z serwerem
         mRobotProxy.reset(new PlayerClient(hostname, port)); // Jeśli się nie powiedzie to catch;
+        mRobotProxy->SetDataMode(PLAYER_DATAMODE_PULL);
         // Pobierz listę urządzeń
         mRobotProxy->RequestDeviceList();
         DeviceInfoList deviceInfoList = mRobotProxy->GetDeviceList();
