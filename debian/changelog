@@ -1,3 +1,9 @@
+liburbirobotflash2.7 (0.0.1-0ubuntu0ppa2~lucid1) lucid; urgency=low
+
+  * Poprawienie funkcji goToGoalPose
+
+ -- Adam Oleksy <adam.oleksy@pwr.wroc.pl>  Tue, 08 Nov 2011 11:04:32 +0100
+
 liburbirobotflash2.7 (0.0.1-0ubuntu0ppa1~lucid1) lucid; urgency=low
 
   * Wlaczenie watka PlayerClient
