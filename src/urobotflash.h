@@ -65,11 +65,12 @@ private:
     
     boost::scoped_ptr<PlayerCc::PlayerClient> mRobotProxy;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mSpeedControllerProxy;
-    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlannerProxy;  
+    boost::scoped_ptr<PlayerCc::PlannerProxy> mPlannerProxy;
     boost::scoped_ptr<PlayerCc::LocalizeProxy> mLocalizeProxy;
     boost::scoped_ptr<PlayerCc::Position2dProxy> mPositionProxy;
     boost::scoped_ptr<PlayerCc::LaserProxy> mLaserProxy;
     boost::thread mSpeedControlThread;
+    boost::mutex mGoToGoalPoseMutex;
     boost::mutex mURobotFlashThreadMutex;
     
     void speedControlThread();
@@ -101,6 +102,7 @@ inline void URobotFlash::setSpeed(double xSpeed, double yawSpeed) {
 inline void URobotFlash::setXSpeed(double xSpeed) {
     if(!isConnected())
         return;
+
     switchController(SpeedController);
     mXSpeed = xSpeed;
 }

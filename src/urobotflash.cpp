@@ -70,31 +70,29 @@ void URobotFlash::setGoalPose(double goalX, double goalY, double goalAngle) {
 }
 
 bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
+    //TODO co będzie przy większej ilości równoległych wywołań goToGoalPose?
     if(!isConnected())
         return false;
     
-    int waitIter = 10;
-    
     stopRobot();
-    this_thread::sleep(posix_time::milliseconds(200));
+    this_thread::sleep(posix_time::milliseconds(300));
     
+    // Poczekaj na zakończenie innych instancji metody goToGoalPose
+    lock_guard<mutex> lock(mGoToGoalPoseMutex);
+
     setGoalPose(goalX, goalY, goalAngle);
-    // Trzeba z piec razy czytac dane;
-    for (int i = 0; i < 10; ++i) {
-        volatile double tmp;
-        tmp = mPlannerProxy->GetPathValid();
-        tmp = mPlannerProxy->GetPathDone();
-        this_thread::sleep(posix_time::milliseconds(100));
-    }
-    
     // Glowna petla oczekiwania
+    int tryGetPathValid = 10;
     while(true) {
         this_thread::sleep(posix_time::milliseconds(100));
-        if(mPlannerProxy->GetPathValid() == 0 && (--waitIter) == 0)
+        if(mPlannerProxy->GetPathValid() == 0 && (--tryGetPathValid) == 0)
+            // Jesli  nie udalo sie znalezc trasy (10 prob)
             return false;
         else if (mPlannerProxy->GetPathDone() != 0)
+            // Osiagnieto cel
             return true;
         else if (mCurrentControllerType != NavigationController)
+            // Anulowanie zadania
             return false;
     }
 }
