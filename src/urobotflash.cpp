@@ -81,6 +81,13 @@ bool URobotFlash::goToGoalPose(double goalX, double goalY, double goalAngle) {
     lock_guard<mutex> lock(mGoToGoalPoseMutex);
 
     setGoalPose(goalX, goalY, goalAngle);
+    // Trzeba z piec razy czytac dane;
+    for (int i = 0; i < 5; ++i) {
+        volatile double tmp;
+        tmp = mPlannerProxy->GetPathValid();
+        tmp = mPlannerProxy->GetPathDone();
+        this_thread::sleep(posix_time::milliseconds(100));
+    }
     // Glowna petla oczekiwania
     int tryGetPathValid = 10;
     while(true) {
