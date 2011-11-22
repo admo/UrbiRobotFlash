@@ -16,6 +16,6 @@ set_target_properties (urobotflash PROPERTIES
   VERSION 0.0.1
   SOVERSION 0.0.1)
 
-install (TARGETS urobotflash DESTINATION lib COMPONENT libraries)
+install (TARGETS urobotflash DESTINATION lib/gostai/uobjects COMPONENT libraries)
 
 configure_file (test.u.in test.u COPYONLY)
