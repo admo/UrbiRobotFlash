@@ -1,8 +1,8 @@
-liburbirobotflash2.7 (0.0.1-0ubuntu0ppa2~lucid1) lucid; urgency=low
+liburbirobotflash2.7 (0.0.1-0ubuntu0ppa3~lucid1) lucid; urgency=low
 
   * Biblioteka instaluje sie w /usr/lib/gostai/uobjects
 
- -- Adam Oleksy <adam.oleksy@pwr.wroc.pl>  Tue, 22 Nov 2011 14:11:24 +0100
+ -- Adam Oleksy <adam.oleksy@pwr.wroc.pl>  Tue, 22 Nov 2011 14:13:45 +0100
 
 liburbirobotflash2.7 (0.0.1-0ubuntu0ppa1~lucid1) lucid; urgency=low
 
