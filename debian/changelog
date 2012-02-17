@@ -1,3 +1,9 @@
+liburbirobotflash2.7 (0.0.1-0ubuntu0ppa4~lucid1) lucid; urgency=low
+
+  * Przekompilowanie dla nowej wersji
+
+ -- Adam Oleksy <adam.oleksy@pwr.wroc.pl>  Fri, 17 Feb 2012 12:20:51 +0100
+
 liburbirobotflash2.7 (0.0.1-0ubuntu0ppa3~lucid1) lucid; urgency=low
 
   * Biblioteka instaluje sie w /usr/lib/gostai/uobjects
